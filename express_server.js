@@ -8,9 +8,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
-  res.send('<h1 style = "color: green;"> Hello Justin!" </h1>');
+//adding route to your express server
+app.get("/hello", (req, res) => {
+  //res.json(urlDatabase);
+  res.send('<html><body>Hello<b>Justin!"</body></html>\n');
 });
 
 app.listen(PORT, () => {
