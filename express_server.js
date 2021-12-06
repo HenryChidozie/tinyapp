@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 const PORT = 8080; //default port
 
+//this tells the express app to use EJS as its templating engine
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -21,6 +22,11 @@ app.get("/hello", (req, res) => {
 app.get("/set", (req, res) => {
   const a = 1;
   res.send(`a = ${a}`);
+});
+
+app.get("/urls", (req, res) => {
+  const templateVars = { urls: urlDatabase };
+  res.render("urls_index", templateVars);
 });
 
 
