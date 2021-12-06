@@ -10,9 +10,15 @@ const urlDatabase = {
 
 //adding route to your express server
 app.get("/hello", (req, res) => {
-  //res.json(urlDatabase);
+  res.json(urlDatabase);
   res.send('<html><body>Hello<b>Justin!"</body></html>\n');
 });
+
+app.get("/set", (req, res) => {
+  const a = 1;
+  res.send(`a = ${a}`);
+});
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
