@@ -1,4 +1,4 @@
-
+#W3D1
 - Templates are files that define the presentation of a web app's data separately from the server logic. 
 
 - In the context of TinyApp, that means they'll define the HTML of a particular page separately from the logic in the Express server.
@@ -31,3 +31,13 @@
 
 //Notice that the name of this file starts with an underscore (_). 
 //This is to signify that it's a partial, in this case, a header partial.
+
+
+#CRUD and HTTP
+
+##CRUD
+- Data can be manipulated in 4 ways:
+1. Create - Add a new record
+2. Read - Retrieve the value of a record
+3. Update - Update a record's value
+4. Delete - Delete a record
