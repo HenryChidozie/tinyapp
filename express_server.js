@@ -72,8 +72,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   }
 });
 
-
-//HOME Page
+//HOME PAGE OF TINY URL
 app.post('urls/:id', (req, res) => {
   if (req.session.user_id) {
     const id = req.params.id;
@@ -81,7 +80,7 @@ app.post('urls/:id', (req, res) => {
   }
 });
 
-//post route to handle the form submission to add new url to database
+//add new url to database
 app.post("/urls", (req, res) => {
   const newTinyUrl = generateRandomString();
   urlDatabase[newTinyUrl] = {
@@ -89,6 +88,15 @@ app.post("/urls", (req, res) => {
     userID: req.session.userI_id
   };
   res.redirect('/urls');
+});
+
+//EDIT TINY URL
+app.post('/urls/:shortURL/edit', (req, res) => {
+  if (req.session.userI_id) {
+    const shortURL = req.params.shortURL;
+    urlDatabase[shortURL].longURL = req.body.longURL;
+    res.redirect('/urls');
+  }
 });
 
 const generateRandomString = () => {
