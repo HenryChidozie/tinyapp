@@ -26,11 +26,30 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  "james": {
+    id: "james",
+    email: "james@example.com"
+    password: bcrypt.hashSync("qwerty", salt)
+  }
+};
+
 
 ////////////////////////////////////////////////////////////////////////
 
 
 //GET REQUESTS
+
+
+//redirect to long URL from shortURL
+app.get("/u/:shortURL", (req, res) => {
+  let templateVars = {
+    shortURL: req.params.shortURL,
+    user: users[req.session.user_id]
+  };
+  res.render('urls_notiny', templateVars);
+});
+
 
 //get route to create new url
 app.get("/urls/new", (req, res) => {
@@ -67,13 +86,24 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 
-
-
-
+//users URL home page
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
+  if (req.session.userI_id) {
+    let urlDatabaseUser = urlsForUser(req.session.userI_id, urlDatabase);
+    console.log(urlDatabaseUser);
+    let templateVars = {
+      urls: urlDatabaseUser,
+      user: users[req.session.user_id]};
+    res.render('urls_index', templateVars);
+  } else {
+    let templateVars = {
+      urls: urlDatabase,
+      user: users[req.session.user_id]
+    };
+    res.render("urls_index", templateVars);
+  }
 });
+
 
 
 
