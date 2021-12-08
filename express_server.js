@@ -8,6 +8,17 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
 
+//HELPER FUNCTIONS
+// const {
+//   generateCookieKey,
+//   generateRandomString,
+//   emailLookup,
+//   authenticator,
+//   getUserByEmail,
+//   urlsForUser
+// } = require('./helpers');
+
+
 
 //DATABASE
 const urlDatabase = {
@@ -46,17 +57,41 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
+
+//POST REQUESTS
+
+
+//DELETE URL
+app.post("/urls/:shortURL/delete", (req, res) => {
+  if (req.session.userI_id) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect('urls');
+  } else {
+    res.send('Cannot find this tiny url to delete');
+  }
+});
+
+
+//HOME Page
+app.post('urls/:id', (req, res) => {
+  if (req.session.user_id) {
+    const id = req.params.id;
+    res.redirect(`/urls/${id}`);
+  }
+});
+
 //post route to handle the form submission to add new url to database
 app.post("/urls", (req, res) => {
   const newTinyUrl = generateRandomString();
   urlDatabase[newTinyUrl] = {
     longURL: req.body.longURL,
-  
+    userID: req.session.userI_id
   };
-
-  res.redirect('/urls');         // Respond with 'Ok' (we will replace this)
+  res.redirect('/urls');
 });
 
 const generateRandomString = () => {
 
 };
+
