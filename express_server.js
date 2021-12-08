@@ -26,36 +26,76 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
+////////////////////////////////////////////////////////////////////////
+
+
+//GET REQUESTS
+
+//get route to create new url
+app.get("/urls/new", (req, res) => {
+  let templateVars = {
+    user: users[req.session.user_id]
+  };
+  if (!users[req.session.user_id]) {
+    res.redirect('/login');
+  } else {
+    res.render("urls_new", templateVars);
+  }
+});
+
+
+
+//shortURL route
+app.get("/urls/:shortURL", (req, res) => {
+  if (!users[req.session.user_id]) {
+    res.redirect('/login');
+  } else if (!urlDatabase[req.params.shortURL] || users[req.session.user_id].id !== urlDatabase[req.params.shortURL].userID) {
+    let templateVars = {
+      shortURL: req.params.shortURL,
+      user: users[req.session.user_id]
+    };
+    res.render("urls_notiny", templateVars);
+  } else {
+    let templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      user: users[req.session.user_id]
+    };
+    res.render("urls_show", templateVars);
+  }
+});
+
+
+
+
+
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+
+
+//redirect back to main page
 app.get("/", (req, res) => {
-  res.send('Hello!');
+  res.send('/urls');
 });
 
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
+//url database as JSON
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
-//get route to show the form
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+
+app.listen(PORT, () => {
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
 
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]
-  };
-  res.render("urls_show", templateVars);
-});
+
+
+////////////////////////////////////////////////////////////////
 
 
 //POST REQUESTS
@@ -100,6 +140,8 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 });
 
 const generateRandomString = () => {
-
+  
 };
+
+
 
