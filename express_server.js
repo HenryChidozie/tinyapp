@@ -117,20 +117,25 @@ app.get('/login', (req, res) => {
   res.render('urls_login', templateVars);
 });
 
-
+//route to registration form
+app.get('/register', (req, res) => {
+  let templateVars = {
+    user: req.session.user_id
+  };
+  res.render('urls_register', templateVars);
+});
 
 //redirect back to main page
 app.get("/", (req, res) => {
   res.send('/urls');
 });
 
-
 //url database as JSON
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
-
+//displays the port on the console
 app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}!`);
 });
