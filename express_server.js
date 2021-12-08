@@ -148,6 +148,12 @@ app.listen(PORT, () => {
 //POST REQUESTS
 
 
+//New user registration
+app.post('/register', (req, res) => {
+  
+})
+
+
 //DELETE URL
 app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.userI_id) {
