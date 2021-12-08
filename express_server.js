@@ -25,8 +25,8 @@ const urlDatabase = {
 const users = {
   "james": {
     id: "james",
-    email: "james@example.com"
-    //password: bcrypt.hashSync("qwerty", salt)
+    email: "james@example.com",
+    password: "dishwasher_herd"
   }
 };
 
@@ -140,6 +140,21 @@ app.listen(PORT, () => {
 
 //New user registration
 app.post('/register', (req, res) => {
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(404).send("Please fill out all required fields");
+  } else if (!emailLookup(req.body.email, users)) {
+    res.status(404).send("This email address already exists in our database. Please choose another email");
+  } else {
+    let newUser = generateRandomString();
+    users[newUser] = {
+      id: newUser,
+      email: req.body.email,
+      password: "baggyjeans78"
+    };
+    let user_Id  = newUser;
+    req.session.user_Id = user_Id;
+    res.redirect('/urls');
+  }
   
 });
 
