@@ -14,16 +14,6 @@ app.set("view engine", "ejs");
 
 
 
-//HELPER FUNCTIONS
-// const {
-//   generateCookieKey,
-//   generateRandomString,
-//   emailLookup,
-//   authenticator,
-//   getUserByEmail,
-//   urlsForUser
-// } = require('./helpers');
-
 
 
 //DATABASE
@@ -51,7 +41,7 @@ const users = {
 app.get("/u/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
-    user: users[req.session.user_id]
+    user: users[req.session.user_Id]
   };
   res.render('urls_notiny', templateVars);
 });
@@ -60,7 +50,7 @@ app.get("/u/:shortURL", (req, res) => {
 //get route to create new url
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    user: users[req.session.user_id]
+    user: users[req.session.user_Id]
   };
   if (!users[req.session.user_id]) {
     res.redirect('/login');
@@ -71,7 +61,7 @@ app.get("/urls/new", (req, res) => {
 
 //shortURL route
 app.get("/urls/:shortURL", (req, res) => {
-  if (!users[req.session.user_id]) {
+  if (!users[req.session.user_Id]) {
     res.redirect('/login');
   } else if (!urlDatabase[req.params.shortURL] || users[req.session.user_id].id !== urlDatabase[req.params.shortURL].userID) {
     let templateVars = {
@@ -92,17 +82,17 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //users URL home page
 app.get("/urls", (req, res) => {
-  if (req.session.userI_id) {
-    let urlDatabaseUser = urlsForUser(req.session.userI_id, urlDatabase);
+  if (req.session.userI_Id) {
+    let urlDatabaseUser = urlsForUser(req.session.userI_Id, urlDatabase);
     console.log(urlDatabaseUser);
     let templateVars = {
       urls: urlDatabaseUser,
-      user: users[req.session.user_id]};
+      user: users[req.session.user_Id]};
     res.render('urls_index', templateVars);
   } else {
     let templateVars = {
       urls: urlDatabase,
-      user: users[req.session.user_id]
+      user: users[req.session.user_Id]
     };
     res.render("urls_index", templateVars);
   }
@@ -112,7 +102,7 @@ app.get("/urls", (req, res) => {
 //route to Login page
 app.get('/login', (req, res) => {
   let templateVars = {
-    user: users[req.session.user_id]
+    user: users[req.session.user_Id]
   };
   res.render('urls_login', templateVars);
 });
@@ -120,7 +110,7 @@ app.get('/login', (req, res) => {
 //route to registration form
 app.get('/register', (req, res) => {
   let templateVars = {
-    user: req.session.user_id
+    user: req.session.user_Id
   };
   res.render('urls_register', templateVars);
 });
@@ -151,7 +141,8 @@ app.listen(PORT, () => {
 //New user registration
 app.post('/register', (req, res) => {
   
-})
+});
+
 
 
 //DELETE URL
