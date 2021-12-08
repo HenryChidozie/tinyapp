@@ -3,9 +3,15 @@ const express = require('express');
 const app = express();
 const PORT = 8080; //default port
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+
+
+
 app.use(bodyParser.urlencoded({ extended: true }));
 //this tells the express app to use EJS as its templating engine
+//app.use(morgan('dev'));
 app.set("view engine", "ejs");
+
 
 
 //HELPER FUNCTIONS
@@ -30,7 +36,7 @@ const users = {
   "james": {
     id: "james",
     email: "james@example.com"
-    password: bcrypt.hashSync("qwerty", salt)
+    //password: bcrypt.hashSync("qwerty", salt)
   }
 };
 
@@ -63,8 +69,6 @@ app.get("/urls/new", (req, res) => {
   }
 });
 
-
-
 //shortURL route
 app.get("/urls/:shortURL", (req, res) => {
   if (!users[req.session.user_id]) {
@@ -72,14 +76,14 @@ app.get("/urls/:shortURL", (req, res) => {
   } else if (!urlDatabase[req.params.shortURL] || users[req.session.user_id].id !== urlDatabase[req.params.shortURL].userID) {
     let templateVars = {
       shortURL: req.params.shortURL,
-      user: users[req.session.user_id]
+      //user: users[req.session.user_id]
     };
     res.render("urls_notiny", templateVars);
   } else {
     let templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
-      user: users[req.session.user_id]
+      //user: users[req.session.user_id]
     };
     res.render("urls_show", templateVars);
   }
@@ -104,6 +108,14 @@ app.get("/urls", (req, res) => {
   }
 });
 
+
+//route to Login page
+app.get('/login', (req, res) => {
+  let templateVars = {
+    user: users[req.session.user_id]
+  };
+  res.render('urls_login', templateVars);
+});
 
 
 
