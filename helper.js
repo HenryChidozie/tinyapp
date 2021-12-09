@@ -1,5 +1,5 @@
 
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // Generate a random string for the user ID
 const generateRandomString = () => {

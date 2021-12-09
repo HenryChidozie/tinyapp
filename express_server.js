@@ -7,15 +7,13 @@ const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 
 // const morgan = require('morgan');
-// const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 
 app.use(bodyParser.urlencoded({ extended: true }));
 //this tells the express app to use EJS as its templating engine
 //app.use(morgan('dev'));
 app.set("view engine", "ejs");
-
-
 
 
 
@@ -27,9 +25,9 @@ const {
   authenticator,
   getUserByEmail,
   urlsForUser
-} = require('./helpers');
+} = require('./helper');
 
-
+ 
 
 //DATABASE
 
@@ -76,17 +74,18 @@ app.post('/login', (req, res) => {
     res.status(400).send("Please fill out all the required fields");
   } else if (authenticator(req.body.email, req.body.password, users)) {
     res.status(403).send("Password or email is incorrect");
+    res.redirect('/urls');
   } else {
     let user_id = getUserByEmail(req.body.email, users);
-    res.cookie("user_id", user_id);
-    res.session.user_id = user_id;
+    req.session.user_id = user_id;
     res.redirect('/urls');
   }
 });
 
+
 //user logout route
 app.post('/logout', (req, res) => {
-  res.session.user_id = null;
+  req.session.user_id = null;
   res.redirect('/urls');
 });
 
@@ -135,11 +134,16 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 
 //redirect to long URL from shortURL
 app.get("/u/:shortURL", (req, res) => {
-  let templateVars = {
-    shortURL: req.params.shortURL,
-    user: users[req.session.user_id]
-  };
-  res.render('urls_notiny', templateVars);
+  if (!urlDatabase[req.params.shortURL]) {
+    let templateVars = {
+      shortURL: req.params.shortURL,
+      user: users[req.session.user_id]
+    };
+    res.render('urls_notiny', templateVars);
+  } else {
+    const longURL = urlDatabase[req.params.shortURL].longURL;
+    res.render(longURL);
+  }
 });
 
 
@@ -156,43 +160,43 @@ app.get("/urls/new", (req, res) => {
 });
 
 //shortURL route
-app.get("/urls/:shortURL", (req, res) => {
+app.get('/urls/:shortURL', (req, res) => {
   if (!users[req.session.user_id]) {
     res.redirect('/login');
   } else if (!urlDatabase[req.params.shortURL] || users[req.session.user_id].id !== urlDatabase[req.params.shortURL].userID) {
     let templateVars = {
       shortURL: req.params.shortURL,
-      //user: users[req.session.user_id]
+      user: users[req.session.user_id]
     };
-    res.render("urls_notiny", templateVars);
+    res.render('urls_notiny', templateVars);
   } else {
-    let templateVars = {
-      shortURL: req.params.shortURL,
+    let templateVars = { shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
-      //user: users[req.session.user_id]
+      user: users[req.session.user_id]
     };
-    res.render("urls_show", templateVars);
+    res.render('urls_show', templateVars);
   }
 });
+
 
 
 //users URL home page
-app.get("/urls", (req, res) => {
-  if (req.session.user_id) {
-    let urlDatabaseUser = urlsForUser(req.session.user_id, urlDatabase);
-    console.log(urlDatabaseUser);
-    let templateVars = {
-      urls: urlDatabaseUser,
-      user: users[req.session.user_id]};
-    res.render('urls_index', templateVars);
-  } else {
-    let templateVars = {
-      urls: urlDatabase,
-      user: users[req.session.user_id]
-    };
-    res.render("urls_index", templateVars);
-  }
-});
+// app.get("/urls", (req, res) => {
+//   if (req.session.user_id) {
+//     let urlDatabaseUser = urlsForUser(req.session.user_id, urlDatabase);
+//     console.log(urlDatabaseUser);
+//     let templateVars = {
+//       urls: urlDatabaseUser,
+//       user: users[req.session.user_id]};
+//     res.render('urls_index', templateVars);
+//   } else {
+//     let templateVars = {
+//       urls: urlDatabase,
+//       user: users[req.session.user_id]
+//     };
+//     res.render("urls_index", templateVars);
+//   }
+// });
 
 
 //route to Login page
