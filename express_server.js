@@ -4,8 +4,10 @@ const express = require('express');
 const app = express();
 const PORT = 8080; //default port
 const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 
+// const morgan = require('morgan');
+// const bcrypt = require('bcrypt');
 
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -14,6 +16,18 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
 
 
+
+
+
+// Helper functions
+const {
+  generateCookieKey,
+  generateRandomString,
+  emailLookup,
+  authenticator,
+  getUserByEmail,
+  urlsForUser
+} = require('./helpers');
 
 
 
@@ -34,8 +48,86 @@ const users = {
   }
 };
 
+//POST REQUESTS
 
-////////////////////////////////////////////////////////////////////////
+//New user registration
+app.post('/register', (req, res) => {
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(404).send("Please fill out all required fields");
+  } else if (!emailLookup(req.body.email, users)) {
+    res.status(404).send("This email address already exists in our database. Please choose another email");
+  } else {
+    let newUser = generateRandomString();
+    users[newUser] = {
+      id: newUser,
+      email: req.body.email,
+      password: "baggyjeans78"
+    };
+    let user_id  = newUser;
+    req.session.user_id = user_id;
+    res.redirect('/urls');
+  }
+});
+
+
+//Post route for user login
+app.post('/login', (req, res) => {
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400).send("Please fill out all the required fields");
+  } else if (authenticator(req.body.email, req.body.password, users)) {
+    res.status(403).send("Password or email is incorrect");
+  } else {
+    let user_id = getUserByEmail(req.body.email, users);
+    res.cookie("user_id", user_id);
+    res.session.user_id = user_id;
+    res.redirect('/urls');
+  }
+});
+
+//user logout route
+app.post('/logout', (req, res) => {
+  res.session.user_id = null;
+  res.redirect('/urls');
+});
+
+
+//DELETE URL
+app.post("/urls/:shortURL/delete", (req, res) => {
+  if (req.session.user_id) {
+    const shortURL = req.params.shortURL;
+    delete urlDatabase[shortURL];
+    res.redirect('urls');
+  } else {
+    res.send('Cannot find this tiny url to delete');
+  }
+});
+
+//HOME PAGE OF TINY URL
+app.post('urls/:id', (req, res) => {
+  if (req.session.user_id) {
+    const id = req.params.id;
+    res.redirect(`/urls/${id}`);
+  }
+});
+
+//add new url to database
+app.post("/urls", (req, res) => {
+  const newTinyUrl = generateRandomString();
+  urlDatabase[newTinyUrl] = {
+    longURL: req.body.longURL,
+    userID: req.session.user_id
+  };
+  res.redirect('/urls');
+});
+
+//EDIT TINY URL
+app.post('/urls/:shortURL/edit', (req, res) => {
+  if (req.session.user_id) {
+    const shortURL = req.params.shortURL;
+    urlDatabase[shortURL].longURL = req.body.longURL;
+    res.redirect('/urls');
+  }
+});
 
 
 //GET REQUESTS
@@ -133,92 +225,6 @@ app.get('/urls.json', (req, res) => {
 app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}!`);
 });
-
-
-
-////////////////////////////////////////////////////////////////
-
-
-//POST REQUESTS
-
-
-//New user registration
-app.post('/register', (req, res) => {
-  if (req.body.email === "" || req.body.password === "") {
-    res.status(404).send("Please fill out all required fields");
-  } else if (!emailLookup(req.body.email, users)) {
-    res.status(404).send("This email address already exists in our database. Please choose another email");
-  } else {
-    let newUser = generateRandomString();
-    users[newUser] = {
-      id: newUser,
-      email: req.body.email,
-      password: "baggyjeans78"
-    };
-    let user_id  = newUser;
-    req.session.user_id = user_id;
-    res.redirect('/urls');
-  }
-});
-
-
-//Post route for user login
-
-app.post('/login', (req, res) => {
-  if (req.body.email === "" || req.body.password === "") {
-    res.status(400).send("Please fill out all the required fields");
-  } else if (authenticator(req.body.email, req.body.password, users)) {
-    res.status(403).send("Password or email is incorrect");
-  } else {
-    let user_id = getUserByEmail(req.body.email, users);
-    res.cookie("user_id", user_id);
-    res.session.user_id = user_id;
-    res.redirect('/urls');
-  }
-});
-
-
-//DELETE URL
-app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.session.user_id) {
-    const shortURL = req.params.shortURL;
-    delete urlDatabase[shortURL];
-    res.redirect('urls');
-  } else {
-    res.send('Cannot find this tiny url to delete');
-  }
-});
-
-//HOME PAGE OF TINY URL
-app.post('urls/:id', (req, res) => {
-  if (req.session.user_id) {
-    const id = req.params.id;
-    res.redirect(`/urls/${id}`);
-  }
-});
-
-//add new url to database
-app.post("/urls", (req, res) => {
-  const newTinyUrl = generateRandomString();
-  urlDatabase[newTinyUrl] = {
-    longURL: req.body.longURL,
-    userID: req.session.user_id
-  };
-  res.redirect('/urls');
-});
-
-//EDIT TINY URL
-app.post('/urls/:shortURL/edit', (req, res) => {
-  if (req.session.user_id) {
-    const shortURL = req.params.shortURL;
-    urlDatabase[shortURL].longURL = req.body.longURL;
-    res.redirect('/urls');
-  }
-});
-
-const generateRandomString = () => {
-  
-};
 
 
 
