@@ -51,15 +51,15 @@ const users = {
 //New user registration
 app.post('/register', (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
-    res.status(404).send("Please fill out all required fields");
+    res.status(400).send("Please fill out all required fields");
   } else if (!emailLookup(req.body.email, users)) {
-    res.status(404).send("This email address already exists in our database. Please choose another email");
+    res.status(400).send("This email address already exists in our database. Please choose another email");
   } else {
     let newUser = generateRandomString();
     users[newUser] = {
       id: newUser,
       email: req.body.email,
-      password: "baggyjeans78"
+      password: bcrypt.hashSync(req.body.password, salt)
     };
     let user_id  = newUser;
     req.session.user_id = user_id;
@@ -74,7 +74,7 @@ app.post('/login', (req, res) => {
     res.status(400).send("Please fill out all the required fields");
   } else if (authenticator(req.body.email, req.body.password, users)) {
     res.status(403).send("Password or email is incorrect");
-    res.redirect('/urls');
+    //res.redirect('/urls');
   } else {
     let user_id = getUserByEmail(req.body.email, users);
     req.session.user_id = user_id;
@@ -95,7 +95,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   if (req.session.user_id) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
-    res.redirect('urls');
+    res.redirect('/urls');
   } else {
     res.send('Cannot find this tiny url to delete');
   }
@@ -179,24 +179,23 @@ app.get('/urls/:shortURL', (req, res) => {
 });
 
 
-
 //users URL home page
-// app.get("/urls", (req, res) => {
-//   if (req.session.user_id) {
-//     let urlDatabaseUser = urlsForUser(req.session.user_id, urlDatabase);
-//     console.log(urlDatabaseUser);
-//     let templateVars = {
-//       urls: urlDatabaseUser,
-//       user: users[req.session.user_id]};
-//     res.render('urls_index', templateVars);
-//   } else {
-//     let templateVars = {
-//       urls: urlDatabase,
-//       user: users[req.session.user_id]
-//     };
-//     res.render("urls_index", templateVars);
-//   }
-// });
+app.get("/urls", (req, res) => {
+  if (req.session.user_id) {
+    let urlDatabaseUser = urlsForUser(req.session.user_id, urlDatabase);
+    console.log(urlDatabaseUser);
+    let templateVars = {
+      urls: urlDatabaseUser,
+      user: users[req.session.user_id]};
+    res.render('urls_index', templateVars);
+  } else {
+    let templateVars = {
+      urls: urlDatabase,
+      user: users[req.session.user_id]
+    };
+    res.render("urls_index", templateVars);
+  }
+});
 
 
 //route to Login page
