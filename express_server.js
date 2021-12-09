@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 //REQUESTING DEPENDENCIES
 const express = require('express');
 const app = express();
@@ -41,7 +42,7 @@ const users = {
 app.get("/u/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
-    user: users[req.session.user_Id]
+    user: users[req.session.user_id]
   };
   res.render('urls_notiny', templateVars);
 });
@@ -50,7 +51,7 @@ app.get("/u/:shortURL", (req, res) => {
 //get route to create new url
 app.get("/urls/new", (req, res) => {
   let templateVars = {
-    user: users[req.session.user_Id]
+    user: users[req.session.user_id]
   };
   if (!users[req.session.user_id]) {
     res.redirect('/login');
@@ -61,7 +62,7 @@ app.get("/urls/new", (req, res) => {
 
 //shortURL route
 app.get("/urls/:shortURL", (req, res) => {
-  if (!users[req.session.user_Id]) {
+  if (!users[req.session.user_id]) {
     res.redirect('/login');
   } else if (!urlDatabase[req.params.shortURL] || users[req.session.user_id].id !== urlDatabase[req.params.shortURL].userID) {
     let templateVars = {
@@ -82,17 +83,17 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //users URL home page
 app.get("/urls", (req, res) => {
-  if (req.session.userI_Id) {
-    let urlDatabaseUser = urlsForUser(req.session.userI_Id, urlDatabase);
+  if (req.session.user_id) {
+    let urlDatabaseUser = urlsForUser(req.session.user_id, urlDatabase);
     console.log(urlDatabaseUser);
     let templateVars = {
       urls: urlDatabaseUser,
-      user: users[req.session.user_Id]};
+      user: users[req.session.user_id]};
     res.render('urls_index', templateVars);
   } else {
     let templateVars = {
       urls: urlDatabase,
-      user: users[req.session.user_Id]
+      user: users[req.session.user_id]
     };
     res.render("urls_index", templateVars);
   }
@@ -102,7 +103,7 @@ app.get("/urls", (req, res) => {
 //route to Login page
 app.get('/login', (req, res) => {
   let templateVars = {
-    user: users[req.session.user_Id]
+    user: users[req.session.user_id]
   };
   res.render('urls_login', templateVars);
 });
@@ -110,7 +111,7 @@ app.get('/login', (req, res) => {
 //route to registration form
 app.get('/register', (req, res) => {
   let templateVars = {
-    user: req.session.user_Id
+    user: req.session.user_id
   };
   res.render('urls_register', templateVars);
 });
@@ -151,18 +152,32 @@ app.post('/register', (req, res) => {
       email: req.body.email,
       password: "baggyjeans78"
     };
-    let user_Id  = newUser;
-    req.session.user_Id = user_Id;
+    let user_id  = newUser;
+    req.session.user_id = user_id;
     res.redirect('/urls');
   }
-  
 });
 
+
+//Post route for user login
+
+app.post('/login', (req, res) => {
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400).send("Please fill out all the required fields");
+  } else if (authenticator(req.body.email, req.body.password, users)) {
+    res.status(403).send("Password or email is incorrect");
+  } else {
+    let user_id = getUserByEmail(req.body.email, users);
+    res.cookie("user_id", user_id);
+    res.session.user_id = user_id;
+    res.redirect('/urls');
+  }
+});
 
 
 //DELETE URL
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (req.session.userI_id) {
+  if (req.session.user_id) {
     const shortURL = req.params.shortURL;
     delete urlDatabase[shortURL];
     res.redirect('urls');
@@ -184,14 +199,14 @@ app.post("/urls", (req, res) => {
   const newTinyUrl = generateRandomString();
   urlDatabase[newTinyUrl] = {
     longURL: req.body.longURL,
-    userID: req.session.userI_id
+    userID: req.session.user_id
   };
   res.redirect('/urls');
 });
 
 //EDIT TINY URL
 app.post('/urls/:shortURL/edit', (req, res) => {
-  if (req.session.userI_id) {
+  if (req.session.user_id) {
     const shortURL = req.params.shortURL;
     urlDatabase[shortURL].longURL = req.body.longURL;
     res.redirect('/urls');
