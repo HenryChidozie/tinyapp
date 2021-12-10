@@ -5,16 +5,8 @@ const app = express();
 const PORT = 8080; //default port
 const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
-
-// const morgan = require('morgan');
+const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
-
-
-app.use(bodyParser.urlencoded({ extended: true }));
-//this tells the express app to use EJS as its templating engine
-//app.use(morgan('dev'));
-app.set("view engine", "ejs");
-
 
 
 // Helper functions
@@ -25,24 +17,46 @@ const {
   authenticator,
   getUserByEmail,
   urlsForUser
-} = require('./helper');
+} = require('./helpers');
 
- 
+
+//bcrypt salts
+const saltRounds = 10;
+const salt = bcrypt.genSaltSync(saltRounds);
+
+
+//Middlewares
+app.use(bodyParser.urlencoded({ extended: true }));
+//middleware for logging HTTP requests and errors
+app.use(morgan('dev'));
+//this tells the express app to use EJS as its templating engine
+app.set("view engine", "ejs");
+
+
+app.use(cookieSession({
+  name: 'session',
+  keys: [generateCookieKey(), generateCookieKey(), generateCookieKey()]
+}));
+
 
 //DATABASE
-
 const urlDatabase = {
   b6UTxQ: { longURL: "http://www.lighthouselabs.ca", userID: "mark" },
-  b2xVn2: { longURL: "https://www.google.ca", userID: "heartless" },
+  b2xVn2: { longURL: "https://www.google.ca", userID: "lucky" },
   ty663d: { longURL: "https://www.amazon.ca", userID: "lucky" },
   d7TvTl: { longURL: "https://www.play.com", userID: "mark" }
 };
 
 const users = {
-  "james": {
-    id: "james",
-    email: "james@example.com",
-    password: "dishwasher_herd"
+  "mark": {
+    id: "mark",
+    email: "mark@example.com",
+    password: bcrypt.hashSync("gtuies", salt)
+  },
+  "lucky": {
+    id: "lucky",
+    email: "lucky@example.com",
+    password: bcrypt.hashSync("kieyga", salt)
   }
 };
 
@@ -74,7 +88,7 @@ app.post('/login', (req, res) => {
     res.status(400).send("Please fill out all the required fields");
   } else if (authenticator(req.body.email, req.body.password, users)) {
     res.status(403).send("Password or email is incorrect");
-    //res.redirect('/urls');
+    res.redirect('/urls');
   } else {
     let user_id = getUserByEmail(req.body.email, users);
     req.session.user_id = user_id;
@@ -102,7 +116,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 //HOME PAGE OF TINY URL
-app.post('urls/:id', (req, res) => {
+app.post('/urls/:id', (req, res) => {
   if (req.session.user_id) {
     const id = req.params.id;
     res.redirect(`/urls/${id}`);
@@ -129,8 +143,23 @@ app.post('/urls/:shortURL/edit', (req, res) => {
 });
 
 
-//GET REQUESTS
+//POST Route to time stamp user login
+// app.post("/urls", (req, res) => {
+//   let now = new Date(new Date().getTime() - 7 * 60 * 60 * 1000).toLocaleString('en-US');
+//   let newUrlKey = generateRandomString();
+//   urlDatabase[newUrlKey] = {
+//     url: req.body['longURL'],
+//     userID: req.session.user_id,
+//     counter: 0,
+//     dateCreate: now
+//   };
+//   res.redirect("/urls/" + newUrlKey);
 
+// });
+
+
+
+//GET REQUESTS
 
 //redirect to long URL from shortURL
 app.get("/u/:shortURL", (req, res) => {

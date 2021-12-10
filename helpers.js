@@ -34,6 +34,7 @@ const emailLookup = (email, database) => {
         return false;
       }
     }
+  
   }
   return true;
 };
