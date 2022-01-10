@@ -66,8 +66,12 @@ const users = {
 app.post('/register', (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
     res.status(400).send("Please fill out all required fields");
+    res.redirect('/urls');
+
   } else if (!emailLookup(req.body.email, users)) {
     res.status(400).send("This email address already exists in our database. Please choose another email");
+    res.redirect('/urls');
+
   } else {
     let newUser = generateRandomString();
     users[newUser] = {
@@ -130,7 +134,7 @@ app.post("/urls", (req, res) => {
     longURL: req.body.longURL,
     userID: req.session.user_id
   };
-  res.redirect('/urls');
+  res.redirect('/urls/:shortURL');
 });
 
 //EDIT TINY URL
@@ -171,7 +175,7 @@ app.get("/u/:shortURL", (req, res) => {
     res.render('urls_notiny', templateVars);
   } else {
     const longURL = urlDatabase[req.params.shortURL].longURL;
-    res.render(longURL);
+    res.rendirect(longURL);
   }
 });
 
@@ -243,10 +247,16 @@ app.get('/register', (req, res) => {
   res.render('urls_register', templateVars);
 });
 
-//redirect back to main page
+//redirect back to root page
 app.get("/", (req, res) => {
-  res.send('/urls');
+  if (req.session.user_id) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
 });
+
+
 
 //url database as JSON
 app.get('/urls.json', (req, res) => {
