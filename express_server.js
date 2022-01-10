@@ -8,22 +8,18 @@ const cookieSession = require('cookie-session');
 const morgan = require('morgan');
 const bcrypt = require('bcryptjs');
 
-
 // Helper functions
 const {
   generateCookieKey,
   generateRandomString,
-  emailLookup,
   authenticator,
   getUserByEmail,
   urlsForUser
 } = require('./helpers');
 
-
 //bcrypt salts
 const saltRounds = 10;
 const salt = bcrypt.genSaltSync(saltRounds);
-
 
 //Middlewares
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -32,12 +28,10 @@ app.use(morgan('dev'));
 //this tells the express app to use EJS as its templating engine
 app.set("view engine", "ejs");
 
-
 app.use(cookieSession({
   name: 'session',
   keys: [generateCookieKey(), generateCookieKey(), generateCookieKey()]
 }));
-
 
 //DATABASE
 const urlDatabase = {
@@ -64,14 +58,16 @@ const users = {
 
 //New user registration
 app.post('/register', (req, res) => {
-  if (req.body.email === "" || req.body.password === "") {
-    res.status(400).send("Please fill out all required fields");
-    res.redirect('/urls');
-
-  } else if (!emailLookup(req.body.email, users)) {
-    res.status(400).send("This email address already exists in our database. Please choose another email");
-    res.redirect('/urls');
-
+  const email = req.body.email;
+  const password = req.body.password;
+  if (!email || !password) {
+    res.status(400).send("Missing email or password");
+    return;
+  }
+  
+  if (getUserByEmail(req.body.email, users)) {
+    res.status(400).send("This email already exists in our database. Please choose another email");
+    res.redirect('/register?');
   } else {
     let newUser = generateRandomString();
     users[newUser] = {
@@ -92,7 +88,7 @@ app.post('/login', (req, res) => {
     res.status(400).send("Please fill out all the required fields");
   } else if (authenticator(req.body.email, req.body.password, users)) {
     res.status(403).send("Password or email is incorrect");
-    res.redirect('/urls');
+    res.redirect('/login');
   } else {
     let user_id = getUserByEmail(req.body.email, users);
     req.session.user_id = user_id;
@@ -100,13 +96,11 @@ app.post('/login', (req, res) => {
   }
 });
 
-
 //user logout route
 app.post('/logout', (req, res) => {
-  req.session.user_id = null;
+  req.session = null;
   res.redirect('/urls');
 });
-
 
 //DELETE URL
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -134,7 +128,7 @@ app.post("/urls", (req, res) => {
     longURL: req.body.longURL,
     userID: req.session.user_id
   };
-  res.redirect('/urls/:shortURL');
+  res.redirect('/urls');
 });
 
 //EDIT TINY URL
@@ -145,23 +139,6 @@ app.post('/urls/:shortURL/edit', (req, res) => {
     res.redirect('/urls');
   }
 });
-
-
-//POST Route to time stamp user login
-// app.post("/urls", (req, res) => {
-//   let now = new Date(new Date().getTime() - 7 * 60 * 60 * 1000).toLocaleString('en-US');
-//   let newUrlKey = generateRandomString();
-//   urlDatabase[newUrlKey] = {
-//     url: req.body['longURL'],
-//     userID: req.session.user_id,
-//     counter: 0,
-//     dateCreate: now
-//   };
-//   res.redirect("/urls/" + newUrlKey);
-
-// });
-
-
 
 //GET REQUESTS
 
@@ -175,10 +152,9 @@ app.get("/u/:shortURL", (req, res) => {
     res.render('urls_notiny', templateVars);
   } else {
     const longURL = urlDatabase[req.params.shortURL].longURL;
-    res.rendirect(longURL);
+    res.redirect(longURL);
   }
 });
-
 
 //get route to create new url
 app.get("/urls/new", (req, res) => {
@@ -211,7 +187,6 @@ app.get('/urls/:shortURL', (req, res) => {
   }
 });
 
-
 //users URL home page
 app.get("/urls", (req, res) => {
   if (req.session.user_id) {
@@ -230,9 +205,12 @@ app.get("/urls", (req, res) => {
   }
 });
 
-
 //route to Login page
 app.get('/login', (req, res) => {
+  if (req.session.user_id) {
+    res.redirect('/urls');
+    return;
+  }
   let templateVars = {
     user: users[req.session.user_id]
   };
@@ -241,6 +219,10 @@ app.get('/login', (req, res) => {
 
 //route to registration form
 app.get('/register', (req, res) => {
+  if (req.session.user_id) {
+    res.render('/urls');
+    return;
+  }
   let templateVars = {
     user: req.session.user_id
   };
@@ -255,8 +237,6 @@ app.get("/", (req, res) => {
     res.redirect('/login');
   }
 });
-
-
 
 //url database as JSON
 app.get('/urls.json', (req, res) => {

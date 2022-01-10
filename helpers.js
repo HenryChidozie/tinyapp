@@ -14,7 +14,6 @@ const generateCookieKey = () => {
     .substring(2,10);
 };
 
-
 // confirms that email and password matches as on database
 const authenticator = (email, password, database) => {
   for (let user of Object.keys(database)) {
@@ -34,7 +33,6 @@ const emailLookup = (email, database) => {
         return false;
       }
     }
-  
   }
   return true;
 };
@@ -61,8 +59,6 @@ const getUserByEmail = (email, database) => {
   }
   return undefined;
 };
-
-
 
 // Exports the functions
 module.exports = {
